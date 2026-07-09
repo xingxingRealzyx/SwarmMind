@@ -1,0 +1,10 @@
+# Copy this file to config.yaml (in the project root, or next to the
+# swarmmind binary) and fill in your key. config.yaml is gitignored.
+#
+# All fields are optional except api_key. Env vars OPENAI_API_KEY /
+# OPENAI_BASE_URL / OPENAI_MODEL, if set, override these values.
+
+openai:
+  api_key: sk-your-key-here
+  base_url: https://api.openai.com   # e.g. https://api.deepseek.com for DeepSeek
+  model: gpt-4o                       # e.g. deepseek-chat for DeepSeek
