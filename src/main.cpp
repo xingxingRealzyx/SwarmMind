@@ -154,29 +154,29 @@ static void run_repl(swarmmind::Agent& orchestrator,
 
         // ── Default pipeline: orchestrator → workers → summary ──
 
+        // Snapshot blackboard size before orchestrator runs — only tasks
+        // posted THIS turn will be dispatched to workers. Stale entries
+        // from previous runs are ignored.
+        size_t bb_snapshot = blackboard->size();
+
         std::cout << "\n\033[1m── Orchestrator: planning ──\033[0m\n";
         orchestrator.run(line);
 
-        auto pending = blackboard->read_by_tag("pending");
-        size_t total_tasks = 0;
-        for (const auto& e : pending) {
-            if (e.type == "task") total_tasks++;
+        auto all_entries = blackboard->read_all();
+        std::vector<std::string> task_contents;
+        for (size_t i = bb_snapshot; i < all_entries.size(); i++) {
+            if (all_entries[i].type == "task")
+                task_contents.push_back(all_entries[i].content);
         }
 
-        if (total_tasks == 0) {
+        if (task_contents.empty()) {
             std::cout << "\n\n";
             continue;
         }
 
-        // Extract task entries for explicit assignment (one worker per task).
-        auto all_entries = blackboard->read_all();
-        std::vector<std::string> task_contents;
-        for (const auto& e : all_entries) {
-            if (e.type == "task") task_contents.push_back(e.content);
-        }
-
-        std::cout << "\n\033[1m── " << task_contents.size()
-                  << " workers, executing in parallel ──\033[0m\n";
+        std::cout << "\033[1m── " << task_contents.size()
+                  << " new tasks → " << task_contents.size()
+                  << " workers ──\033[0m\n";
 
         auto t0 = std::chrono::steady_clock::now();
         std::vector<std::thread> threads;
