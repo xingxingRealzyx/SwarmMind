@@ -189,16 +189,17 @@ static void run_repl(swarmmind::Agent& orchestrator,
                     std::make_unique<swarmmind::BlackboardPostTool>(blackboard, name));
                 swarmmind::Agent worker(client, tools);
                 worker.set_blackboard(blackboard, name);
-                worker.set_max_tool_rounds(10);
-                worker.run(
-                    "Execute this task and post your result to the blackboard:\n\n" +
-                    task + "\n\n"
-                    "When done, use blackboard_post to post your findings:\n"
-                    "  type: \"result\"\n"
-                    "  content: \"<your detailed findings>\"\n"
-                    "  tags: [\"done\"]\n\n"
-                    "Then say \"done\" — nothing more."
+                worker.set_max_tool_rounds(5);
+                worker.set_system_prompt(
+                    "You are a worker agent. Execute the given task. When you have "
+                    "findings, you MUST call blackboard_post with type=\"result\" and "
+                    "tags=[\"done\"]. Then say \"done\".\n\n"
+                    "Do NOT just describe what you would do — actually call tools "
+                    "(read_file, bash, etc.) to gather information, then post a "
+                    "substantive result. Do NOT call blackboard_post unless you have "
+                    "real findings to report."
                 );
+                worker.run(task);
             });
         }
         for (auto& t : threads) t.join();
